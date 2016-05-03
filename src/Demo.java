@@ -78,6 +78,23 @@ public class Demo {
         }
     }
 
+    public void Demo5(int size) throws InterruptedException {
+        Channel channel = new Channel();
+        java.util.ArrayList<Thread> threads = new java.util.ArrayList<>();
+
+        for (int i = 0; i < size; i++) {
+            threads.add(new Thread(new SendDemoStage2(channel)));
+            threads.get(i).start();
+        }
+
+        threads.add(new Thread(new RecvDemoStage2(channel, size)));
+        threads.get(size).start();
+
+        for (int i = 0; i < size + 1; i++) {
+            threads.get(i).join();
+        }
+    }
+
     public class SendDemo implements Runnable {
         Channel c;
         int messages = 1;

@@ -1,8 +1,5 @@
-import java.rmi.ConnectIOException;
-import java.util.concurrent.locks.Condition;
-
 public class Channel {
-    private boolean DEBUG = true;
+    private boolean DEBUG = false;
     private final java.util.concurrent.locks.Lock lock = new java.util.concurrent.locks.ReentrantLock();
     public volatile java.util.LinkedList<Comm> sendQueue, recvQueue;
 
@@ -82,45 +79,73 @@ public class Channel {
 
     //STAGE 2
     boolean recvQueueIsEmpty() {
-        return recvQueue.isEmpty();
+        lock.lock();
+        boolean b = recvQueue.isEmpty();
+        lock.unlock();
+        return b;
     }
 
     boolean sendQueueIsEmpty() {
-        return sendQueue.isEmpty();
+        lock.lock();
+        boolean b = sendQueue.isEmpty();
+        lock.unlock();
+        return b;
     }
 
-    Condition addToSendQueue(Object o) {
+    Object addToSendQueueThenWait(Object o) {
+        if (DEBUG) System.out.println("add to send.");
         lock.lock();
         java.util.concurrent.locks.Condition c = lock.newCondition();
         Comm comm = new Comm(o, c);
         sendQueue.add(comm);
+        try {
+            if (DEBUG) System.out.println("send waiting.");
+            c.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         lock.unlock();
-        return c;
+        return o;
     }
 
-    Condition addToRecvQueue(Object o) {
+    Object addToRecvQueueThenWait(Object o) {
+        if (DEBUG) System.out.println("add to recv.");
         lock.lock();
         java.util.concurrent.locks.Condition c = lock.newCondition();
         Comm comm = new Comm(o, c);
         recvQueue.add(comm);
+        try {
+            if (DEBUG) System.out.println("recv waiting.");
+            c.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         lock.unlock();
-        return c;
+        return o;
     }
 
-    Condition fulfillSend(Object o) {
+    Object fulfillSend(Object o) {
+        if (DEBUG) System.out.println("fulfill send.");
         lock.lock();
         Comm out = sendQueue.removeFirst();
         o = out.o;
+        out.c.signal();
         lock.unlock();
-        return out.c;
+        return o;
     }
 
-    Condition fulfillRecv(Object o) {
+    Object fulfillRecv(Object o) {
+        if (DEBUG) System.out.println("fulfill recv.");
         lock.lock();
         Comm out = recvQueue.removeFirst();
         out.o = o;
+        out.c.signal();
         lock.unlock();
-        return out.c;
+        return out.o;
+    }
+
+    java.util.concurrent.locks.Lock getLock() {
+        return lock;
     }
 
 }
