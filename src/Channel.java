@@ -1,7 +1,10 @@
+import java.rmi.ConnectIOException;
+import java.util.concurrent.locks.Condition;
+
 public class Channel {
     private boolean DEBUG = true;
     private final java.util.concurrent.locks.Lock lock = new java.util.concurrent.locks.ReentrantLock();
-    private volatile java.util.LinkedList<Comm> sendQueue, recvQueue;
+    public volatile java.util.LinkedList<Comm> sendQueue, recvQueue;
 
     Channel() {
         this.sendQueue = new java.util.LinkedList<>();
@@ -9,6 +12,7 @@ public class Channel {
         if (DEBUG) System.out.println("Channel made.");
     }
 
+    ///STAGE 1
     Object Send(Object o)
     {
         lock.lock();
@@ -74,4 +78,49 @@ public class Channel {
         lock.unlock();
         return o;
     }
+    ///END STAGE 1
+
+    //STAGE 2
+    boolean recvQueueIsEmpty() {
+        return recvQueue.isEmpty();
+    }
+
+    boolean sendQueueIsEmpty() {
+        return sendQueue.isEmpty();
+    }
+
+    Condition addToSendQueue(Object o) {
+        lock.lock();
+        java.util.concurrent.locks.Condition c = lock.newCondition();
+        Comm comm = new Comm(o, c);
+        sendQueue.add(comm);
+        lock.unlock();
+        return c;
+    }
+
+    Condition addToRecvQueue(Object o) {
+        lock.lock();
+        java.util.concurrent.locks.Condition c = lock.newCondition();
+        Comm comm = new Comm(o, c);
+        recvQueue.add(comm);
+        lock.unlock();
+        return c;
+    }
+
+    Condition fulfillSend(Object o) {
+        lock.lock();
+        Comm out = sendQueue.removeFirst();
+        o = out.o;
+        lock.unlock();
+        return out.c;
+    }
+
+    Condition fulfillRecv(Object o) {
+        lock.lock();
+        Comm out = recvQueue.removeFirst();
+        out.o = o;
+        lock.unlock();
+        return out.c;
+    }
+
 }

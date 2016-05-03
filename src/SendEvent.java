@@ -13,10 +13,18 @@ public class SendEvent extends CommEvent {
     }
 
     boolean poll() {
+        if (!c.recvQueueIsEmpty()) {
+            c.fulfillRecv(o).notify();
+            return true;
+        }
         return false;
     }
 
     void enqueue() {
-
+        try {
+            c.addToSendQueue(o).await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

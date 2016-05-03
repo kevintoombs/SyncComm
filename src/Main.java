@@ -6,5 +6,7 @@ public class Main {
         d.Demo1();
         d.Demo2();
         d.Demo3();
+        d.Demo4(100); //
+
     }
 }
