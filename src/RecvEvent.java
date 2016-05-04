@@ -1,18 +1,7 @@
 public class RecvEvent extends CommEvent {
-    private Channel c;
-    private Object o = null;
-    private final java.util.concurrent.locks.Lock lock;
 
     RecvEvent(Channel inC) {
         c = inC;
-        lock = c.getLock();
-    }
-
-    Object sync() {
-        lock.lock();
-        if (!poll()) enqueue();
-        lock.unlock();
-        return o;
     }
 
     boolean poll() {
@@ -28,5 +17,10 @@ public class RecvEvent extends CommEvent {
     void enqueue() {
         if (true) System.out.println("adding to recv.");
         c.addToRecvQueueThenWait(o);
+    }
+
+    void enqueue2(java.util.concurrent.locks.Condition condition) {
+        if (true) System.out.println("adding to recv.");
+        c.addToRecvQueue(o, condition);
     }
 }
