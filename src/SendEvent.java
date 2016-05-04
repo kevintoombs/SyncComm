@@ -1,19 +1,8 @@
 public class SendEvent extends CommEvent {
-    private Channel c;
-    private Object o;
-    private final java.util.concurrent.locks.Lock lock;
 
     SendEvent(Object inO, Channel inC) {
         o = inO;
         c = inC;
-        lock = c.getLock();
-    }
-
-    Object sync() {
-        lock.lock();
-        if (!poll()) enqueue();
-        lock.unlock();
-        return o;
     }
 
     boolean poll() {
@@ -29,5 +18,10 @@ public class SendEvent extends CommEvent {
     void enqueue() {
         if (true) System.out.println("adding to send.");
         c.addToSendQueueThenWait(o);
+    }
+
+    void enqueue2(java.util.concurrent.locks.Condition condition) {
+        if (true) System.out.println("adding to send.");
+        c.addToSendQueue(o, condition);
     }
 }

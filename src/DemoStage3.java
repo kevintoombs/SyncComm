@@ -1,13 +1,10 @@
-public class Demo2 {
-    public class SendDemo implements Runnable {
+public class DemoStage3 {
+    public class Sender implements Runnable {
         Channel c;
         int messages = 1;
+        SelectionList list;
 
-        public SendDemo(Channel in_c) {
-            this.c = in_c;
-        }
-
-        public SendDemo(Channel in_c, int in_messages) {
+        public Sender(Channel in_c, int in_messages) {
             this.c = in_c;
             this.messages = in_messages;
         }
@@ -15,27 +12,27 @@ public class Demo2 {
         public void run() {
             String s = Thread.currentThread().toString() + " says hi!";
             for (int i = 0; i < messages; i++) {
-                c.Send(s);
+                Object v = new SendEvent(s, c).sync();
             }
         }
     }
 
-    public class RecvDemo implements Runnable {
+    public class Recver implements Runnable {
         Channel c;
         int messages = 1;
 
-        public RecvDemo(Channel in_c) {
+        public Recver(Channel in_c) {
             this.c = in_c;
         }
 
-        public RecvDemo(Channel in_c, int in_messages) {
+        public Recver(Channel in_c, int in_messages) {
             this.c = in_c;
             this.messages = in_messages;
         }
 
         public void run() {
             for (int i = 0; i < messages; i++) {
-                Object o = c.Recv();
+                Object o = new RecvEvent(c).sync();
                 if (o instanceof String) {
                     String s = (String) o;
                     System.out.println(s);

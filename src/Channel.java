@@ -148,4 +148,29 @@ public class Channel {
         return lock;
     }
 
+    //STAGE 3
+    Object addToSendQueue(Object o, java.util.concurrent.locks.Condition c) {
+        lock.lock();
+        Comm comm = new Comm(o, c);
+        sendQueue.add(comm);
+        lock.unlock();
+        return o;
+    }
+
+    Object addToRecvQueue(Object o, java.util.concurrent.locks.Condition c) {
+        lock.lock();
+        Comm comm = new Comm(o, c);
+        recvQueue.add(comm);
+        lock.unlock();
+        return o;
+    }
+
+    boolean removeFromQueues(Object o) {
+        lock.lock();
+        boolean b = false;
+        if (recvQueue.remove(o)) b = true;
+        if (sendQueue.remove(o)) b = true;
+        lock.unlock();
+        return b;
+    }
 }
